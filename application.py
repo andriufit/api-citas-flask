@@ -355,14 +355,19 @@ def getDatesByDay():
 
     mydb = myclient["Clinica"]
     mycol = mydb["citas"]
-    day = request.json.get('day', None)
-
-    if not day or (day > 31 or day < 1):
-        return jsonify({"msg": "Bad request"}), 400
-
-    dates = mycol.find({"day": day, "cancel": {"$ne": 1}}, {"_id": 0})
+    date = request.json.get('day', None)
     
-    return jsonify(format_dates(list(dates)))
+
+    try:
+        date_validation = datetime.strptime(date, "%d/%m/%Y")  
+        day = date_validation.day
+        if not day or (day > 31 or day < 1):
+            return jsonify({"msg": "Bad request"}), 400
+        dates = mycol.find({"day": date, "cancel": {"$ne": 1}}, {"_id": 0})
+        return jsonify(format_dates(list(dates)))
+    except ValueError:
+        return jsonify({"msg": "Invalid date format, use DD/MM/YYYY"}), 400
+
 
 
 @app.route("/date/getByUser", methods=['GET'])
